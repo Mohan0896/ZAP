@@ -2,6 +2,7 @@ apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'groovy'
 apply plugin: 'idea'
+apply plugin: 'sonar'
 
 group = 'net.thucydides.showcase'
 version = '0.0.1-SNAPSHOT'
@@ -24,21 +25,8 @@ dependencies {
     testCompile "junit:junit:4.10"
     testCompile "org.hamcrest:hamcrest-library:1.1"
     groovy 'org.codehaus.groovy:groovy:1.8.6'
-}
-
-task prepear(type: Test) {
-    if (project.hasProperty("teamcity")) {
-        systemProperties["webdriver.base.url"] = project.teamcity["webdriver.base.url"]
-        systemProperties["webdriver.chrome.driver"] = project.teamcity["webdriver.chrome.driver"]
-        systemProperties["webdriver.driver"] = project.teamcity["webdriver.driver"]
-        systemProperties["thucydides.only.save.failing.screenshots"] = project.teamcity["thucydides.only.save.failing.screenshots"]
-    } else {
-        systemProperties["webdriver.base.url"] = System.properties["webdriver.base.url"]
-        systemProperties["webdriver.chrome.driver"] = System.properties["webdriver.chrome.driver"]
-        systemProperties["webdriver.driver"] = System.properties["webdriver.driver"]
-        systemProperties["thucydides.only.save.failing.screenshots"] = System.properties["thucydides.only.save.failing.screenshots"]
-    }
-    include 'LaSenza/Developing.class'
+    /*compile 'org.codehaus.sonar-plugins:sonar-groovy-plugin:0.6'*/
+    //Install groovy-sonar-plugin to analyze groovy language
 }
 
 task develop(type: Test) {
@@ -58,32 +46,19 @@ task develop(type: Test) {
     exclude 'LaSenza/Developing.class'
 }
 
-task simple(type: Test) {
-    if (project.hasProperty("teamcity")) {
-        systemProperties["webdriver.base.url"] = project.teamcity["webdriver.base.url"]
-        systemProperties["webdriver.chrome.driver"] = project.teamcity["webdriver.chrome.driver"]
-        systemProperties["webdriver.driver"] = project.teamcity["webdriver.driver"]
-        systemProperties["thucydides.only.save.failing.screenshots"] = project.teamcity["thucydides.only.save.failing.screenshots"]
-    } else {
-        systemProperties["webdriver.base.url"] = System.properties["webdriver.base.url"]
-        systemProperties["webdriver.chrome.driver"] = System.properties["webdriver.chrome.driver"]
-        systemProperties["webdriver.driver"] = System.properties["webdriver.driver"]
-        systemProperties["thucydides.only.save.failing.screenshots"] = System.properties["thucydides.only.save.failing.screenshots"]
+sonar {
+    server {
+        url = "http://sonar.web-dev.in.ua"
     }
-    include 'LaSenza/UseDiscountCheckout.class'
-
-    task byJbehave(type: Test) {
-        if (project.hasProperty("teamcity")) {
-            systemProperties["webdriver.base.url"] = project.teamcity["webdriver.base.url"]
-            systemProperties["webdriver.chrome.driver"] = project.teamcity["webdriver.chrome.driver"]
-            systemProperties["webdriver.driver"] = project.teamcity["webdriver.driver"]
-            systemProperties["thucydides.only.save.failing.screenshots"] = project.teamcity["thucydides.only.save.failing.screenshots"]
-        } else {
-            systemProperties["webdriver.base.url"] = System.properties["webdriver.base.url"]
-            systemProperties["webdriver.chrome.driver"] = System.properties["webdriver.chrome.driver"]
-            systemProperties["webdriver.driver"] = System.properties["webdriver.driver"]
-            systemProperties["thucydides.only.save.failing.screenshots"] = System.properties["thucydides.only.save.failing.screenshots"]
-        }
-        include 'LaSenza/JBehaveTest.class'
+    database {
+        url = "jdbc:mysql://sonar.web-dev.in.ua:3306/sonar?useUnicode=true&amp;characterEncoding=utf8"
+        driverClassName = "com.mysql.jdbc.Driver"
+        username = "sonar"
+        password = "sonar"
+    }
+    project {
+        language = "groovy"
+        dynamicAnalysis = "false"
     }
 }
+
