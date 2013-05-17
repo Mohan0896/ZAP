@@ -384,7 +384,7 @@ class CLPage extends ForAllPage {
         element(colorPopUpColosSwatches).click()
     }
 
-    def set__and_store_multiple_product_conﬁgurations_QV(def productNumber, def colorNumber, def sizeNumber) {
+    def set__and_store_multiple_product_configurations_QV(def productNumber, def colorNumber, def sizeNumber) {
         element(linkAddMoreItems).click()
         element(By.xpath("//fieldset[@class='product-options']//div[${productNumber}]//div[@class='option-wrapper'][1]//select")).selectByIndex(colorNumber)
         element(By.xpath("//fieldset[@class='product-options']//div[${productNumber}]//div[@class='option-wrapper'][2]//select")).selectByIndex(sizeNumber)

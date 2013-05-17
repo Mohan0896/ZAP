@@ -154,7 +154,7 @@ class PDPage extends HomePage {
         assertThat(element(buttonAddToCart).getText(), equalTo("UPDATE CART"))
     }
 
-    def set__and_store_multiple_product_conﬁgurations(def productNumber, int colorNumber, int sizeNumber) {
+    def set__and_store_multiple_product_configurations(def productNumber, int colorNumber, int sizeNumber) {
         element(linkAddMoreItems).click()
         element(By.xpath("//fieldset[@class='product-options']//div[${productNumber}]//div[@class='option-wrapper'][1]//select")).selectByIndex(colorNumber)
         element(By.xpath("//fieldset[@class='product-options']//div[${productNumber}]//div[@class='option-wrapper'][2]//select")).selectByIndex(sizeNumber)

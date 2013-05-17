@@ -1,0 +1,162 @@
+<project basedir="." default="compile">
+
+	<!-- This file contains all of the environment specific configuration, change it for your setup -->
+    <property file="local.properties"/>
+    <property name='lib' value='lib' />
+
+    <path id='classpath'>
+        <fileset dir="${lib}" includes="**/*.jar" />
+    </path>
+
+    <path id="java.classpath">
+        <fileset dir="build">
+            <include name="*.jar" />
+        </fileset>
+        <fileset dir="lib">
+            <include name="*.jar" />
+        </fileset>
+        <fileset dir="build">
+            <include name="*.class" />
+        </fileset>
+        <pathelement location="build"/>
+    </path>
+
+    <taskdef name="groovyc" classname="org.codehaus.groovy.ant.Groovyc" classpathref="java.classpath">
+    <classpath>
+        <pathelement location="lib/groovy-all-1.8.0-rc-4.jar"/>
+        <pathelement location="lib/selenium-server-standalone-2.32.0.jar"/>
+        <pathelement location="lib/thucydides-core-0.9.95.jar"/>
+        <pathelement location="lib/lambdaj-1.10.jar"/>
+        <pathelement location="lib/slf4j-api-1.7.5.jar"/>
+        <pathelement location="lib/fluentlenium-core-0.8.0.jar"/>
+        <pathelement location="lib/jbehave-core-3.7.1.jar"/>
+        <pathelement location="lib/optional-1.5.4.jar"/>
+    </classpath>
+    </taskdef>
+
+    <taskdef name="junit" classname="org.codehaus.groovy.ant.Groovyc" classpathref="java.classpath">
+    <classpath>
+        <pathelement location="lib/groovy-all-1.8.0-rc-4.jar"/>
+        <pathelement location="lib/selenium-server-standalone-2.32.0.jar"/>
+        <pathelement location="lib/thucydides-core-0.9.95.jar"/>
+        <pathelement location="lib/lambdaj-1.10.jar"/>
+        <pathelement location="lib/slf4j-api-1.7.5.jar"/>
+        <pathelement location="lib/fluentlenium-core-0.8.0.jar"/>
+        <pathelement location="lib/jbehave-core-3.7.1.jar"/>
+        <pathelement location="lib/optional-1.5.4.jar"/>
+    </classpath>
+    </taskdef>
+
+
+	<!-- Compile all of the source code -->
+	<target name="compile">
+		<!-- Compile the java code -->
+		<javac target="1.7" destdir="build/src" srcdir="src" classpathref="java.classpath" includeantruntime="false" />
+        <groovyc srcdir="src" destdir="build/src" classpathref="java.classpath"/>
+    </target>
+
+	<target name="test" depends="compile">
+        <!-- Run the JUnit tests -->
+        <junit printsummary="yes">
+                <sysproperty key="webdriver.base.url" value="http://lasenza-dev-ca.lcgosc.com/develop/"/>
+                <sysproperty key="thucydides.only.save.failing.screenshots" value="true"/>
+                <sysproperty key="webdriver.chrome.driver" value="c:\chrome\chromedriver.exe"/>
+                <sysproperty key="webdriver.driver" value="chrome"/>
+            <classpath>
+        		<fileset dir="lib">
+        			<include name="*.jar" />
+        		</fileset>
+        		<pathelement location="build"/>
+                <path path="build/src" />
+            </classpath>
+            <formatter type="plain" usefile="false"/>
+            <formatter type="xml"/>
+            <batchtest fork="yes" todir="build/test">
+                <fileset dir="build/src">
+                    <include name="**/HeaderCustomerWithCookies.class"/>
+                    <exclude name="/LaSenza/Steps/*.class"/>
+                    <exclude name="/LaSenza/pages/*.class"/>
+                </fileset>
+                <!--<fileset dir="src">
+                    <include name="**/*Test.java"/>
+                </fileset>-->
+            </batchtest>
+		</junit>
+	</target>
+
+	<target name="zap-test">
+		<!-- Your servlet engine must be running when you start this test -->
+
+		<!-- Start ZAP with UI -->
+		<ant antfile="zap-build.xml" target="startZap" inheritAll="false"/>
+
+		<!-- OR Start ZAP in background -->
+		<!-- 
+			IMPORTANT - there is a bug in ZAP 1.4.0 which means ZAP running in daemon mode will exit 
+			when you save the session 
+		-->
+		<!--
+		<ant antfile="zap-build.xml" target="startZapDaemon" inheritAll="false"/>
+		-->
+		
+		<!-- Run the standard tests -->
+        <junit printsummary="yes" fork="yes">
+        	<sysproperty key="zap.proxy" value="${zap.addr}:${zap.port}"/>
+        	<sysproperty key="zap.targetApp" value="${zap.targetApp}"/>
+            <classpath>
+        		<fileset dir="root/WEB-INF/lib">
+        			<include name="*.jar" />
+        		</fileset>
+        		<fileset dir="lib">
+        			<!--include name="*.jar" /-->
+        			<include name="selenium-server-standalone-2.32.0.jar" />
+        		</fileset>
+        		<pathelement location="bin"/>
+                <path path="build/WEB-INF/classes" />
+            </classpath>
+            <formatter type="plain"/>
+            <formatter type="xml"/>
+            <batchtest fork="yes" todir="build/tests">
+                <fileset dir="src">
+                    <include name="**/FunctionalZAP.java"/>
+                </fileset>
+            </batchtest>
+		</junit>
+
+		<sleep seconds="5"/>
+
+		<!-- Spider the whole site -->
+		<ant antfile="zap-build.xml" target="spider" inheritAll="false"/>
+
+		<sleep seconds="5"/>
+
+		<!-- Active scan the whole site -->
+		<ant antfile="zap-build.xml" target="activescan" inheritAll="false"/>
+
+		<sleep seconds="3"/>
+
+		<!-- Save to a timestamped session file -->
+		<tstamp>
+			<format property="timestamp" pattern="yyyy-MM-dd-HH-mm-ss"/>
+		</tstamp>
+		<ant antfile="zap-build.xml" target="savesession" inheritAll="false">
+			<!-- Override the session name -->
+			<property name="zap.session" value="bodgeit-${timestamp}"/>
+		</ant>
+
+		<!-- Give the passive scanner thread a chance to catch up -->
+		<sleep seconds="5"/>
+		
+		<!-- Check the alerts logged -->
+		<ant antfile="zap-build.xml" target="alertcheck" inheritAll="false"/>
+		
+		<!--
+		Note that if the above test fails ZAP will not be stopped, so you will need to call the stopZap target directly.
+		-->
+
+		<!-- Stop ZAP -->
+		<ant antfile="zap-build.xml" target="stopZap" inheritAll="false"/>
+
+	</target>
+
+</project>

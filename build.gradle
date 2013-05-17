@@ -1,3 +1,8 @@
+configurations {
+    antClasspath
+}
+ant.importBuild 'build.xml'
+/*
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'groovy'
@@ -15,6 +20,7 @@ targetCompatibility = 1.7
 repositories {
     mavenRepo urls: ["http://repo.maven.apache.org/maven2"]
 }
+
 dependencies {
     compile "net.thucydides:thucydides-core:0.9.95"
     compile "net.thucydides:thucydides-jbehave-plugin:0.9.95"
@@ -25,10 +31,9 @@ dependencies {
     testCompile "junit:junit:4.10"
     testCompile "org.hamcrest:hamcrest-library:1.1"
     groovy 'org.codehaus.groovy:groovy:1.8.6'
-    /*compile 'org.codehaus.sonar-plugins:sonar-groovy-plugin:0.6'*/
-    //Install groovy-sonar-plugin to analyze groovy language
+    compile 'org.codehaus.sonar-plugins:sonar-groovy-plugin:0.6'
 }
-
+*/
 task develop(type: Test) {
     if (project.hasProperty("teamcity")) {
         systemProperties["webdriver.base.url"] = project.teamcity["webdriver.base.url"]
@@ -45,7 +50,7 @@ task develop(type: Test) {
     exclude 'LaSenza/JBehaveTest.class'
     exclude 'LaSenza/Developing.class'
 }
-
+/*
 sonar {
     server {
         url = "http://sonar.web-dev.in.ua"
@@ -61,4 +66,6 @@ sonar {
         dynamicAnalysis = "false"
     }
 }
+*/
+
 
